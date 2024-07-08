@@ -7,9 +7,14 @@ import numpy as np
 from PIL import Image
 from multiprocessing import Process, Queue, cpu_count
 
-from tritonclient.grpc import service_pb2, service_pb2_grpc
-from tritonclient.utils import triton_to_np_dtype
+#from tritonclient.grpc import service_pb2, service_pb2_grpc
+#from tritonclient.utils import triton_to_np_dtype
+#import tritonclient.grpc.model_config_pb2 as mc
+
+import asyncio
+import tritonclient.grpc.aio as grpcclient
 import tritonclient.grpc.model_config_pb2 as mc
+
 from pathlib import Path
 
 
@@ -18,7 +23,8 @@ def image_conversion(img, width, height):
     img = cv2.resize(img, (width, height), interpolation=cv2.INTER_AREA)
     img = np.asarray(img, dtype='float32')
     img /= 255
-    img = img.flatten()
+    # img = img.flatten()
+    img = np.expand_dims(img, axis=0)
 
     return img
 
@@ -43,17 +49,32 @@ def common_request(img, model_name, model_version):
 
     return request
 
-
 def send_request(queue, img, options):
-    channel = grpc.insecure_channel("localhost:8001")
-    grpc_stub = service_pb2_grpc.GRPCInferenceServiceStub(channel)
+    asyncio.run(async_request(queue, img, options))
 
-    request = common_request(img, "emissions_poland", "1")
+async def async_request(queue, img, options):
+#   channel = grpc.insecure_channel("localhost:8001")
+#   grpc_stub = service_pb2_grpc.GRPCInferenceServiceStub(channel)
+
+#   request = common_request(img, "emissions_poland", "1")
+
+    client = grpcclient.InferenceServerClient(url="localhost:8001")
+
+    # prepare inputs/outputs
+    inference_inputs = []
+    inference_inputs.append(grpcclient.InferInput("input_1", [1, 384, 512, 3], "FP32"))
+    img = image_conversion(img, 512, 384)
+    inference_inputs[0].set_data_from_numpy(img)
 
     while True:
         start_time = time.time()
-        response = grpc_stub.ModelInfer(request)
-        # grpc_stub.ModelInfer(request)
+        # response = grpc_stub.ModelInfer(request)
+
+        response = await client.infer(
+            model_name="emissions_poland",
+            inputs=inference_inputs,
+            model_version="1"
+        )
 
         if response is not None:
              queue.put((start_time, time.time() - start_time))
@@ -86,7 +107,7 @@ def log_results(queue):
 def main():
     queue = Queue()
     # num_processes = cpu_count() - 1
-    num_processes = 10
+    num_processes = 1
     processes = []
 
     img_bytes = cv2.imread("triton_performance/resources/image.jpg")
