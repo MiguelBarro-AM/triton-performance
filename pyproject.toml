@@ -10,7 +10,7 @@ python = "^3.12"
 requests = "^2.32.3"
 opencv-python = "^4.10.0.84"
 pillow = "^10.4.0"
-tritonclient = {extras=["grpc"], version="^2.47.0"}
+tritonclient = {extras=["all"], version="^2.47.0"}
 
 
 [build-system]
