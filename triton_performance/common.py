@@ -12,7 +12,7 @@ def image_conversion(img, width, height):
     return img
 
 
-def log_results(queue):
+def log_results(queue, batch_size):
     start_time = 0
     count = 0
     avg_time = 0
@@ -23,7 +23,7 @@ def log_results(queue):
         if span > 5:
             start_time = duration[0]
             if count != 0:
-                print(f"Requests per second: {count/span:.4f} / Average time: {avg_time/count:.4f}")
+                print(f"Requests per second: {(count/span)*batch_size:.4f} / Average time: {avg_time/count:.4f}")
                 count = 0
                 avg_time = 0
 

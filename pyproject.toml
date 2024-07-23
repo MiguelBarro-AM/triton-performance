@@ -19,4 +19,5 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 performance = "triton_performance.cli:main"
+sharedmemory = "triton_performance.shm_inference:main"
 monitor = "triton_performance.monitor:monitor_inferences"
