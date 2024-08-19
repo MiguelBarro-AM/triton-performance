@@ -13,23 +13,13 @@ import tritonclient.grpc.model_config_pb2 as mc
 from pathlib import Path
 
 
-def image_conversion(img, width, height):
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, (width, height), interpolation=cv2.INTER_AREA)
-    img = np.asarray(img, dtype='float32')
-    img /= 255
-    img = img.flatten()
-
-    return img
-
-
 def common_request(img, model_name, model_version):
     img = image_conversion(img, 512, 384)
 
     # Generate the request
     request = service_pb2.ModelInferRequest()
-    request.model_name = model_name
-    request.model_version = model_version
+    request.name = model_name
+    request.version = model_version
 
     # Populate the inputs in inference request
     input0 = service_pb2.ModelInferRequest().InferInputTensor()

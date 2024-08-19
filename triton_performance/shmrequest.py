@@ -12,17 +12,6 @@ url = 'localhost:8000'
 client = httpclient.InferenceServerClient(url=url, verbose=False)
 
 
-class Model:
-    def __init__(self, model_name, model_version, input_name, output_name):
-        self.model_name = model_name
-        self.model_version = model_version
-        self.input_name = input_name
-        self.output_name = output_name
-
-    def __str__(self):
-        return f"Model name: {self.model_name}, Model version: {self.model_version}"
-
-
 class SharedMemoryRegion:
     def __init__(self, name, key, size):
         self.name = name
@@ -79,7 +68,7 @@ def send_request(queue, img, batch_size: int, input_shm: SharedMemoryRegion, out
         outputs.append(httpclient.InferRequestedOutput(model.output_name))
         outputs[0].set_shared_memory(output_shm.name, output_shm.size)
 
-        _ = client.infer(model_name=model.model_name, inputs=inputs, outputs=outputs)
+        _ = client.infer(model_name=model.name, inputs=inputs, outputs=outputs)
 
         outputs = shm.get_contents_as_numpy(output_shm.handle, np.float32, [batch_size, 1, 2])
 
